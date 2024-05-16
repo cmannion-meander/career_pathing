@@ -7,11 +7,11 @@ load_dotenv()
 chatClient = AzureOpenAI(
   azure_endpoint=os.getenv("AOAI_ENDPOINT"), 
   api_key=os.getenv("AOAI_KEY"),  
-  api_version="2023-05-15"
+  api_version=os.getenv("AOAI_API_VERSION")
 )
 
 chatResponse = chatClient.chat.completions.create(
-    model="mannion-gpt35",
+    model=os.getenv("COMPLETIONS_DEPLOYMENT_NAME"),
     messages=[
         {"role": "system", "content": "You are a helpful, fun and friendly sales assistant for Cosmic Works, a bicycle and bicycle accessories store."},
         {"role": "user", "content": "Do you sell bicycles?"},
