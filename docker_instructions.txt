@@ -1,0 +1,9 @@
+docker build --pull --rm -f "DOCKERFILE" -t careerpathing:latest "."
+
+
+
+docker run -d -p 4242:80 --name career-pathing careerpathing:latest
+
+
+
+docker build -t careerpathing .
