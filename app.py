@@ -1,4 +1,4 @@
-import azure.cognitiveservices.speech as speechsdk
+# import azure.cognitiveservices.speech as speechsdk
 import json
 import io as io
 import os
@@ -16,8 +16,10 @@ from tenacity import retry, wait_random_exponential, stop_after_attempt
 
 app = Flask(__name__)
 
+environment = os.getenv('FLASK_ENV')
+
 # Configuration from environment variables
-app.config['ENV'] = os.getenv('FLASK_ENV')
+app.config['ENV'] = environment
 
 load_dotenv()
 
@@ -27,19 +29,24 @@ client = AzureOpenAI(
   api_version=os.getenv("AOAI_API_VERSION")
 )
 
-# Set up Azure Speech-to-Text and Text-to-Speech credentials
-speech_key = os.getenv("SPEECH_API_KEY")
-service_region = "eastus"
-speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
-speech_config.speech_synthesis_language = "en-US"
-speech_config.speech_synthesis_voice_name = "en-GB-LibbyNeural"
-speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
+# # Set up Azure Speech-to-Text and Text-to-Speech credentials
+# speech_key = os.getenv("SPEECH_API_KEY")
+# service_region = "eastus"
+# speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=service_region)
+# speech_config.speech_synthesis_language = "en-US"
+# speech_config.speech_synthesis_voice_name = "en-GB-LibbyNeural"
+# speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
 # Setup Mongo DB Connection
+
 user = urllib.parse.quote_plus(os.environ.get("user"))
 password = urllib.parse.quote_plus(os.environ.get("password"))
-DB_URL = os.environ.get("DB_CONNECTION_STRING")
-CONNECTION_STRING = f"mongodb+srv://{user}:{password}@{DB_URL}"
+if environment=="development":
+    DB_URL = os.environ.get("DB_CONNECTION_STRING")
+    CONNECTION_STRING = f"mongodb+srv://{user}:{password}@{DB_URL}"
+else:
+    DB_URL = os.environ.get("PROD_CONNECTION_STRING")
+    CONNECTION_STRING = f"mongodb+srv://{user}:{password}@{DB_URL}"
 db_client = pymongo.MongoClient(CONNECTION_STRING)
 db = db_client.cosmic_works
 
@@ -65,48 +72,6 @@ def send_message():
         formatted_response = "There was an error processing your request."
     
     return jsonify({'response': formatted_response})
-
-@app.route('/text-to-speech', methods=['POST'])
-def text_to_speech_route():
-    print("Received text-to-speech POST request")
-    data = request.get_json()
-    text = data.get('text', '')
-
-    if not text:
-        print("No text provided")
-        return jsonify({'error': 'No text provided'}), 400
-
-    audio_data = text_to_speech(text)
-    if audio_data:
-        print("Returning synthesized audio")
-        # Convert the byte stream to a response
-        return send_file(
-            io.BytesIO(audio_data),
-            mimetype="audio/wav",
-            as_attachment=False,  # Adjust based on whether you want the file to be downloaded or played
-        )
-    else:
-        print("Failed to synthesize speech")
-        return jsonify({'error': 'Failed to synthesize speech'}), 500
-
-def text_to_speech(text):
-    """Convert text to speech using Azure Cognitive Services."""
-    try:
-        print(f"Converting text to speech: {text}")
-        # Request speech synthesis
-        result = speech_synthesizer.speak_text_async(text).get()
-
-        if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-            print("Text-to-speech conversion successful.")
-            return result.audio_data  # Returning audio data
-        else:
-            print(f"Error synthesizing audio: {result.reason}")
-            return None
-    except Exception as ex:
-        print(f"Error in text-to-speech conversion: {ex}")
-        return None
-
-
 
 # A system prompt describes the responsibilities, instructions, and persona of the AI.
 system_prompt = """

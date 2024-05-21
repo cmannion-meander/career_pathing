@@ -1,16 +1,13 @@
-azure-cognitiveservices-speech
-azure-storage-blob
 pymongo==4.6.1
-python-dotenv==1.0.0
-requests==2.31.0
 pydantic==2.5.2
-openai==1.6.0
 tenacity==8.2.3
 tiktoken==0.5.2
 fastapi==0.108.0
 uvicorn==0.25.0
 flask
 markdown2
+openai
 psycopg2-binary
+python-dotenv ~= 0.19
+requests ~= 2.27
 whitenoise
-gunicorn==21.2.0
