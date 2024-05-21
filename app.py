@@ -1,4 +1,3 @@
-# import azure.cognitiveservices.speech as speechsdk
 import json
 import io as io
 import os
@@ -29,6 +28,9 @@ client = AzureOpenAI(
   api_version=os.getenv("AOAI_API_VERSION")
 )
 
+# Declare db at the global scope
+db = None
+
 # # Set up Azure Speech-to-Text and Text-to-Speech credentials
 # speech_key = os.getenv("SPEECH_API_KEY")
 # service_region = "eastus"
@@ -37,40 +39,56 @@ client = AzureOpenAI(
 # speech_config.speech_synthesis_voice_name = "en-GB-LibbyNeural"
 # speech_synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config)
 
-# Setup Mongo DB Connection
+# Setup MongoDB Connection
+# try:
+print("User:", os.environ.get("user"))
+print("Password:", os.environ.get("password"))
+print("DB Connection String:", os.environ.get("DB_CONNECTION_STRING"))
+print("Prod Connection String:", os.environ.get("PROD_CONNECTION_STRING"))
 
-user = urllib.parse.quote_plus(os.environ.get("user"))
-password = urllib.parse.quote_plus(os.environ.get("password"))
-if environment=="development":
-    DB_URL = os.environ.get("DB_CONNECTION_STRING")
-    CONNECTION_STRING = f"mongodb+srv://{user}:{password}@{DB_URL}"
-else:
-    DB_URL = os.environ.get("PROD_CONNECTION_STRING")
-    CONNECTION_STRING = f"mongodb+srv://{user}:{password}@{DB_URL}"
-db_client = pymongo.MongoClient(CONNECTION_STRING)
+user = os.environ.get("user")
+password = os.environ.get("password")
+db_url = os.environ.get("DB_CONNECTION_STRING") if environment == "development" else os.environ.get("PROD_CONNECTION_STRING")
+
+if not all([user, password, db_url]):
+    raise ValueError("Missing one or more required environment variables: user, password, DB_CONNECTION_STRING/PROD_CONNECTION_STRING")
+
+user = urllib.parse.quote_plus(user)
+password = urllib.parse.quote_plus(password)
+connection_string = f"mongodb+srv://{user}:{password}@{db_url}"
+print(f"Connecting to MongoDB with connection string: {connection_string}")
+
+db_client = pymongo.MongoClient(connection_string)
 db = db_client.cosmic_works
+print("Successfully connected to MongoDB")
+# except pymongo.errors.ConfigurationError as e:
+#     print(f"ConfigurationError: {e}")
+# except Exception as e:
+#     print(f"An error occurred: {e}")
 
 COMPLETIONS_DEPLOYMENT_NAME=os.getenv("COMPLETIONS_DEPLOYMENT_NAME")
 EMBEDDINGS_DEPLOYMENT_NAME=os.getenv("EMBEDDINGS_DEPLOYMENT_NAME")
 
 @app.route('/', methods=['GET'])
 def home():
-    # Just render the initial form
     return render_template('index.html')
 
 @app.route('/send-message', methods=['POST'])
 def send_message():
     data = request.get_json()
-    user_message = data['message']
+    user_message = data.get('message', '')
+
+    print(f"Received message: {user_message}")
+
     try:
         assistant_response = rag_with_vector_search(user_message, 5)
-
-        # Add line breaks after punctuation
-        # formatted_response = re.sub(r'(?<=[.!?])\s', '\n\n', assistant_response)
+        print(f"Assistant response: {assistant_response}")
         formatted_response = assistant_response
     except Exception as e:
-        formatted_response = "There was an error processing your request."
-    
+        error_message = f"Error occurred: {str(e)}"
+        print(error_message)
+        formatted_response = error_message
+
     return jsonify({'response': formatted_response})
 
 # A system prompt describes the responsibilities, instructions, and persona of the AI.
@@ -106,6 +124,7 @@ def vector_search(collection_name, query, num_results=3):
 
     returns a list of the top num_results most similar documents
     """
+    global db
     collection = db[collection_name]
     query_embedding = generate_embeddings(query)    
     pipeline = [
@@ -127,25 +146,33 @@ def rag_with_vector_search(question: str, num_results: int = 5):
     Use the RAG model to generate a prompt using vector search results based on the
     incoming question.  
     """
-    # perform the vector search and build product list
-    results = vector_search("jobs", question, num_results=num_results)
-    jobs_list = ""
-    for result in results:
-        if "contentVector" in result["document"]:
-            del result["document"]["contentVector"]
-        jobs_list += json.dumps(result["document"], indent=4, default=str) + "\n\n"
+    print(f"Received question for vector search: {question}")
 
-    # generate prompt for the LLM with vector results
-    formatted_prompt = system_prompt + jobs_list
+    try:
+        results = vector_search("jobs", question, num_results=num_results)
+        print(f"Vector search results: {results}")
 
-    # prepare the LLM request
-    messages = [
-        {"role": "system", "content": formatted_prompt},
-        {"role": "user", "content": question}
-    ]
+        jobs_list = ""
+        for result in results:
+            if "contentVector" in result["document"]:
+                del result["document"]["contentVector"]
+            jobs_list += json.dumps(result["document"], indent=4, default=str) + "\n\n"
 
-    completion = client.chat.completions.create(messages=messages, model=COMPLETIONS_DEPLOYMENT_NAME)
-    return completion.choices[0].message.content
+        formatted_prompt = system_prompt + jobs_list
+        print(f"Formatted prompt: {formatted_prompt}")
+
+        messages = [
+            {"role": "system", "content": formatted_prompt},
+            {"role": "user", "content": question}
+        ]
+
+        completion = client.chat.completions.create(messages=messages, model=COMPLETIONS_DEPLOYMENT_NAME)
+        print(f"Completion response: {completion}")
+
+        return completion.choices[0].message.content
+    except Exception as e:
+        print(f"Error in RAG with vector search: {str(e)}")
+        raise e
 
 if __name__ == '__main__':
     app.run()
