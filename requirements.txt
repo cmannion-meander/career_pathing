@@ -11,3 +11,4 @@ psycopg2-binary
 python-dotenv ~= 0.19
 requests ~= 2.27
 whitenoise
+langchain==0.0.330
