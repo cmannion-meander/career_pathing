@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Meander | Job Results
+{% endblock title %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <h2>Results for: "{{ question }}"</h2>
+    {% if jobs %}
+        <div class="row">
+            <div class="col-md-8">
+                <div class="list-group">
+                    {% for job in jobs %}
+                        <div class="list-group-item job-card" data-toggle="collapse" data-target="#job-details-{{ loop.index }}">
+                            <h5 class="job-title">{{ job.title }}</h5>
+                            <h6 class="job-subtitle">{{ job.companyName }} - {{ job.jobLocation }}</h6>
+                            <p>{{ job.roleName }}</p>
+                        </div>
+                        <div id="job-details-{{ loop.index }}" class="collapse">
+                            <div class="job-details job-description-card">
+                                <h5>Job Details</h5>
+                                <p>{{ job.description }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <p>No jobs found matching your query.</p>
+    {% endif %}
+</div>
+{% endblock content %}
+
+{% block extrajs %}
+<script>
+    $(document).ready(function() {
+        $('.job-card').on('click', function() {
+            var target = $(this).data('target');
+            $('.collapse').not(target).collapse('hide');
+            $(target).collapse('show');
+        });
+    });
+</script>
+{% endblock extrajs %}

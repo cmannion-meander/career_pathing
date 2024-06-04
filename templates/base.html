@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        {% block title %}
+            Meander | Career Management Tools
+        {% endblock title %}
+    </title>
+    <link rel="icon" href="static/favicon.png">
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajaxibs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+    <style>
+        /* Custom CSS for chat window */
+        #chatWindow {
+            background-color: #f9f9f9;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin: 0 auto; /* Center the chat window */
+            max-width: 800px; /* Limit the width for readability */
+        }
+        .chat-message {
+            margin-bottom: 10px; /* Space between messages */
+            line-height: 1.6; /* Makes text easier to read */
+            font-size: 16px;
+        }
+        .chat-message.user {
+            text-align: right;
+            color: #007bff;
+            background-color: #e7f3ff;
+            padding: 10px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .chat-message.user::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: -10px;
+            border-width: 10px;
+            border-style: solid;
+            border-color: #e7f3ff transparent transparent transparent;
+        }
+        .chat-message.assistant {
+            text-align: left;
+            color: #28a745;
+            background-color: #e8f5e9;
+            padding: 10px;
+            border-radius: 10px;
+            position: relative;
+        }
+        .chat-message.assistant::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: -10px;
+            border-width: 10px;
+            border-style: solid;
+            border-color: transparent transparent transparent #e8f5e9;
+        }
+        #loading {
+            text-align: center;
+            color: #dc3545;
+            font-style: italic;
+        }
+        /* General body styling */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .job-card {
+            margin-bottom: 20px;
+        }
+        .job-card:hover {
+            cursor: pointer;
+            background-color: #f8f9fa;
+        }
+        .job-details {
+            border-left: 1px solid #ddd;
+            padding-left: 20px;
+        }
+        .job-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+        .job-subtitle {
+            font-size: 1rem;
+            color: #6c757d;
+        }
+        .job-apply-button {
+            background-color: #007bff;
+            color: white;
+        }
+        .job-apply-button:hover {
+            background-color: #0056b3;
+        }
+        .job-description-card {
+            border: 1px solid #ddd;
+            border-radius: 0.25rem;
+            padding: 1rem;
+            margin-top: -20px;
+            margin-bottom: 20px;
+            background-color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">Tech Career Advisor</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('index') }}">Career Chat</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('resume_builder') }}">Resume Builder</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('search_jobs') }}">Job Search</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('resources') }}">Resources</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% block content %}
+
+    {% endblock content %}
+
+    <!-- Bootstrap and jQuery libraries -->
+<!-- jQuery Library -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<!-- Bootstrap JavaScript -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+
+{% block extrajs %}
+
+{% endblock extrajs %}
+</body>
+</html>

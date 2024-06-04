@@ -1,90 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meander Career Tools</title>
-    <link rel="icon" href="static/favicon.png">
-    <!-- Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <!-- Bootstrap JS -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
-    <style>
-        /* Custom CSS for chat window */
-        #chatWindow {
-            background-color: #f9f9f9;
-            color: #333;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            margin: 0 auto; /* Center the chat window */
-            max-width: 800px; /* Limit the width for readability */
-        }
-        .chat-message {
-            margin-bottom: 10px; /* Space between messages */
-            line-height: 1.6; /* Makes text easier to read */
-            font-size: 16px;
-        }
-        .chat-message.user {
-            text-align: right;
-            color: #007bff;
-            background-color: #e7f3ff;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        .chat-message.assistant {
-            text-align: left;
-            color: #28a745;
-            background-color: #e8f5e9;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        #loading {
-            text-align: center;
-            color: #dc3545;
-            font-style: italic;
-        }
-        /* General body styling */
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f0f2f5;
-            color: #333;
-            margin: 0;
-            padding: 0;
-        }
-    </style>
-    
-</head>
-<body>
+{% extends 'base.html' %}
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="container">
-            <a class="navbar-brand" href="/">Tech Career Advisor</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" id="chatTab" data-toggle="tab" href="#chatInterface">Career Chat</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Resume Builder</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Job Search</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Resources</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-    
-    
+{% block title %}
+Meander | AI Career Advisor
+{% endblock title %}
+
+{% block content %}
 
 <div class="container mt-5">
     <div class="tab-content">
@@ -92,7 +12,7 @@
             <h2>Career Exploration Chat</h2>
             <div class="card">
                 <div class="card-body">
-                    <div id="chatWindow" style="height: 600px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
+                    <div id="chatWindow" style="height: 800px; overflow-y: scroll; border: 1px solid #ccc; padding: 10px;">
                         <!-- Chat messages will be displayed here -->
                     </div>
                     <textarea id="chatInput" class="form-control mt-3" placeholder="Type your question..." rows="3"></textarea>
@@ -100,161 +20,156 @@
                     <button onclick="startVoiceInput()" class="btn btn-secondary mt-2" id="startSpeechButton">Start Speech</button>
                     <div id="loading" style="display: none;">Assistant is thinking...</div>
                 </div>
-                
             </div>
         </div>
     </div>
-</div> 
-<script> 
-        // Prepare speech synthesis
-        const synth = window.speechSynthesis;
+</div>
 
-        function startVoiceInput() {
-            const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
-        
-            recognition.start();
-        
-            const startButton = document.getElementById('startSpeechButton');
+{% endblock content %}
+
+{% block extrajs %}
+
+<script>
+    // Prepare speech synthesis
+    const synth = window.speechSynthesis;
+
+    function startVoiceInput() {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.start();
+
+        const startButton = document.getElementById('startSpeechButton');
+        if (startButton) {
+            startButton.classList.add('btn-warning');
+            startButton.textContent = 'Listening...';
+        }
+
+        recognition.onresult = function(event) {
+            const speechResult = event.results[0][0].transcript;
+            document.getElementById('chatInput').value = speechResult;
             if (startButton) {
-                startButton.classList.add('btn-warning');
-                startButton.textContent = 'Listening...';
+                startButton.classList.remove('btn-warning');
+                startButton.textContent = 'Start Speech';
             }
-        
-            recognition.onresult = function(event) {
-                const speechResult = event.results[0][0].transcript;
-                document.getElementById('chatInput').value = speechResult;
-                if (startButton) {
-                    startButton.classList.remove('btn-warning');
-                    startButton.textContent = 'Start Speech';
-                }
-                // Check if the speech result is empty before sending the message
-                if (speechResult.trim() !== "") {
-                    sendMessage();  // Automatically send the message
-                } else {
-                    alert("Speech recognition did not capture any input. Please try again.");
-                }
-            };
-        
-            recognition.onerror = function(event) {
-                console.error('Speech recognition error', event.error);
-                if (startButton) {
-                    startButton.classList.remove('btn-warning');
-                    startButton.textContent = 'Start Speech';
-                }
-            };
-        
-            recognition.onend = function() {
-                if (startButton) {
-                    startButton.classList.remove('btn-warning');
-                    startButton.textContent = 'Start Speech';
-                }
-                console.log('Speech recognition service disconnected');
-            };
-        }
+            if (speechResult.trim() !== "") {
+                sendMessage();
+            } else {
+                alert("Speech recognition did not capture any input. Please try again.");
+            }
+        };
 
-        function sendMessage() {
-            console.log("sendMessage called");
-            var inputElement = document.getElementById('chatInput');
-            var message = inputElement.value.trim(); // Trim whitespace
-            if (message === "") {
-                alert("Please enter a message."); // Alert user to enter a message
-                return; // Exit function if the message is empty
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error', event.error);
+            if (startButton) {
+                startButton.classList.remove('btn-warning');
+                startButton.textContent = 'Start Speech';
             }
-            inputElement.value = ''; // Clear input after sending
-            updateChatWindow('user', message);
-            showLoading(true);
-        
-            fetch('/send-message', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ message: message })
-            })
-            .then(response => response.json())
-            .then(data => {
-                showLoading(false);
-                updateChatWindow('assistant', data.response);
-                // var isSpeechEnabled = document.getElementById('speechToggle').checked;
-                // if (isSpeechEnabled) {
-                //    console.log("Calling speak function");
-                //    speak(data.response); // Read out the response using text-to-speech only if toggle is on
-                //}
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showLoading(false);
-            });
-        }
-        
-        
-        
-        
-       
-        function speak(text) {
-            // Remove any existing audio element to prevent multiple instances
-            const existingAudio = document.getElementById('audioPlayer');
-            if (existingAudio) {
-                existingAudio.pause();
-                existingAudio.remove();
-            }
-        
-            fetch('/text-to-speech', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ text: text })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to synthesize speech');
-                }
-                return response.blob();
-            })
-            .catch(error => {
-                console.error('Error synthesizing speech:', error);
-            });
-        }
-             
-        
+        };
 
-        function updateChatWindow(sender, message) {
-            var chatWindow = document.getElementById('chatWindow');
-            var messageDiv = document.createElement('div');
-            messageDiv.className = 'chat-message ' + sender;
-        
-            // Format message by adding paragraphs in JavaScript
-            let formattedMessage = message.replace(/(?<![0-9])([.!?])\s+/g, '$1<br><br>');
-            messageDiv.innerHTML = (sender === 'user' ? 'You: ' : 'Assistant: ') + formattedMessage;
-        
-            chatWindow.appendChild(messageDiv);
-            chatWindow.scrollTop = chatWindow.scrollHeight; // Scroll to the latest message
-        }        
-        
-        function showLoading(isVisible) {
-            var loadingElement = document.getElementById('loading');
-            loadingElement.style.display = isVisible ? 'block' : 'none';
+        recognition.onend = function() {
+            if (startButton) {
+                startButton.classList.remove('btn-warning');
+                startButton.textContent = 'Start Speech';
+            }
+            console.log('Speech recognition service disconnected');
+        };
+    }
+
+    function sendMessage() {
+        console.log("sendMessage called");
+        var inputElement = document.getElementById('chatInput');
+        var message = inputElement.value.trim();
+        if (message === "") {
+            alert("Please enter a message.");
+            return;
         }
-    
-        $(document).ready(function(){
-            // Initialize Bootstrap tabs
-            $('#resumeTab').on('click', function () {
-                $('#chatTab').removeClass('active');
-                $('#resumeTab').addClass('active');
-                $('#chatInterface').removeClass('active show');
-                $('#resumeWindow').addClass('active show');
-            });
-    
-            $('#chatTab').on('click', function () {
-                $('#resumeTab').removeClass('active');
-                $('#chatTab').addClass('active');
-                $('#resumeWindow').removeClass('active show');
-                $('#chatInterface').addClass('active show');
-            });
+        inputElement.value = '';
+        updateChatWindow('user', message);
+        showLoading(true);
+
+        fetch('/send-message', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            showLoading(false);
+            updateChatWindow('assistant', data.response);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showLoading(false);
         });
-    
+    }
+
+    function speak(text) {
+        const existingAudio = document.getElementById('audioPlayer');
+        if (existingAudio) {
+            existingAudio.pause();
+            existingAudio.remove();
+        }
+
+        fetch('/text-to-speech', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text: text })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to synthesize speech');
+            }
+            return response.blob();
+        })
+        .catch(error => {
+            console.error('Error synthesizing speech:', error);
+        });
+    }
+
+    function updateChatWindow(sender, message) {
+        var chatWindow = document.getElementById('chatWindow');
+        var messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message ' + sender;
+
+        let formattedMessage = message.replace(/(?<![0-9])([.!?])\s+/g, '$1<br><br>');
+        messageDiv.innerHTML = (sender === 'user' ? 'You: ' : 'Assistant: ') + formattedMessage;
+
+        chatWindow.appendChild(messageDiv);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+
+    function showLoading(isVisible) {
+        var loadingElement = document.getElementById('loading');
+        loadingElement.style.display = isVisible ? 'block' : 'none';
+    }
+
+    document.getElementById("chatInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+        }
+    });
+
+    $(document).ready(function(){
+        $('#resumeTab').on('click', function () {
+            $('#chatTab').removeClass('active');
+            $('#resumeTab').addClass('active');
+            $('#chatInterface').removeClass('active show');
+            $('#resumeWindow').addClass('active show');
+        });
+
+        $('#chatTab').on('click', function () {
+            $('#resumeTab').removeClass('active');
+            $('#chatTab').addClass('active');
+            $('#resumeWindow').removeClass('active show');
+            $('#chatInterface').addClass('active show');
+        });
+    });
 </script>
-</body>
-</html>
+
+{% endblock extrajs %}

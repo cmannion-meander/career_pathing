@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Meander | AI Resume Builder
+{% endblock title %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="resumeWindow">
+            <h2 class="mb-4 text-center">Convert Your Military Resume to a Civilian Resume</h2>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <form action="/convert-resume" method="post">
+                        <div class="mb-3">
+                            <label for="resumeText" class="form-label">Paste Your Military Resume:</label>
+                            <textarea class="form-control" id="resumeText" name="resume_text" rows="10" required></textarea>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">Convert</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% if original and response %}
+            <div class="row">
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Original Resume:</h4>
+                            <pre id="originalResume" class="p-3 bg-light" style="white-space: pre-wrap;">{{ original }}</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Civilianized Resume:</h4>
+                            <pre id="convertedResume" class="p-3 bg-light" style="white-space: pre-wrap;">{{ response }}</pre>
+                            <div class="text-center mt-3">
+                                <button onclick="copyToClipboard('#convertedResume')" class="btn btn-secondary">Copy to Clipboard</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+    </div>
+</div>
+
+{% endblock content %}
+
+{% block extrajs %}
+<script>
+    function copyToClipboard(element) {
+        var text = document.querySelector(element).innerText;
+        navigator.clipboard.writeText(text).then(function() {
+            alert('Copied to clipboard!');
+        }).catch(function(err) {
+            alert('Error in copying text: ', err);
+        });
+    }
+</script>
+{% endblock extrajs %}
